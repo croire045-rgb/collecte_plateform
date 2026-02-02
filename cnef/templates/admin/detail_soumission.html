@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails de Soumission</title>
+    {% load static %}
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'image/Congo.png' %}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard {
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            
+        }        
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 120px;
+        }
+
+        .header-center {
+            text-align: center;
+            flex: 1;
+            padding: 0 20px;
+        }
+
+        .main-title {
+            font-size: 1.6em;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .separator {
+            width: 30%;
+            height:3px;
+            background: #000304;
+            margin: 6px auto;
+            border: none;
+        }        
+
+        .sub-title {
+            font-size: 1.1em;
+            color: #efce13;
+            font-weight: 600;
+        }
+
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100px;
+        }
+
+        .logo-left {
+            margin-right: auto;
+        }
+
+        .logo-right {
+            margin-left: auto;
+        }
+
+        .header-image {
+            height: 100px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .dashboard-container {
+            
+            margin: 30px auto;
+            padding: 0 25px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eaeaea;
+            position: relative;
+        }
+
+        .page-header::after {
+            content: "";
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            border-radius: 3px;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            font-weight: 600;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .page-title::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: #3498db;
+            border-radius: 2px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .btn-details {
+            background-color: #f8f9fa;
+            color: #495057;
+            border: 1px solid #dee2e6;
+        }
+
+        .btn-details:hover {
+            background-color: #e9ecef;
+            color: #212529;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .soumissions-table {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            margin-bottom: 40px;
+            border: 1px solid #f0f0f0;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 30px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .table-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .statut-badge {
+            padding: 8px 18px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .statut-en_cours {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .statut-reussi {
+            background-color: #d1edff;
+            color: #0c5460;
+            border: 1px solid #a8e6ff;
+        }
+
+        .statut-erreur {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5b7b1;
+        }
+
+        .content-section {
+            padding: 30px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 35px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.08);
+        }
+
+        .info-card h4 {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #dee2e6;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .info-card h4::before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 20px;
+            background: linear-gradient(to bottom, #3498db, #2c3e50);
+            margin-right: 12px;
+            border-radius: 3px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #e9ecef;
+            transition: background-color 0.2s ease;
+            padding: 10px 5px;
+            border-radius: 5px;
+        }
+
+        .info-item:hover {
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: right;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.08);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .highlight-value {
+            position: relative;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+
+        /* Section des incohérences */
+        .incoherences-card {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+            border-left: 5px solid #dc3545;
+        }
+
+        .incoherences-card h4 {
+            color: #721c24;
+        }
+
+        .incoherences-card h4::before {
+            background: linear-gradient(to bottom, #dc3545, #c82333);
+        }
+
+        .incoherence-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .incoherence-stat {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .incoherence-stat .number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #dc3545;
+            margin-bottom: 5px;
+        }
+
+        .incoherence-stat .label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .erreurs-list {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .erreur-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #fff5f5;
+            border-left: 3px solid #dc3545;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #721c24;
+        }
+
+        .erreur-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .success-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #d4edda;
+            color: #155724;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .warning-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #fff3cd;
+            color: #856404;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .actions-section {
+            text-align: center;
+            padding: 30px;
+            border-top: 1px solid #dee2e6;
+            background: #f8f9fa;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .btn-valider {
+            background: linear-gradient(to right, #28a745, #20c997);
+            color: white;
+            margin-right: 20px;
+            padding: 12px 25px;
+            font-weight: 600;
+        }
+
+        .btn-valider:hover {
+            background: linear-gradient(to right, #218838, #1ea085);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-rejeter {
+            background: linear-gradient(to right, #dc3545, #e83e8c);
+            color: white;
+            padding: 12px 25px;
+            font-weight: 600;
+        }
+
+        .btn-rejeter:hover {
+            background: linear-gradient(to right, #c82333, #d91a7a);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-container {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .info-card {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .info-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+
+{% load static %}
+
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <div class="logo-container logo-left">
+                <img src="{% static 'image/Congo.png' %}" alt="République du Congo" class="header-image">
+            </div>
+
+            <div class="header-center">
+                <div class="main-title">Comité National Économique et Financier<br> (CNEF)</div>
+                <hr class="separator">
+                <div class="sub-title">Banque des Etats de l'Afrique Centrale<br> (BEAC)</div>
+            </div>
+
+            <div class="logo-container logo-right">
+                <img src="{% static 'image/BEAC.png' %}" alt="BEAC" class="header-image">
+            </div>
+        </div>
+    </div>
+
+    {% block content %}
+        <div class="dashboard-container">
+            <div class="page-header">
+                <h2 class="page-title">{{ fichier.nom_fichier }}</h2>
+                <div>
+                    <a href="{% url 'interface_chef' %}" class="btn btn-details">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                            <path fill-rule="evenodd" d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5z"/>
+                        </svg>
+                        Retour
+                    </a>
+                    <a href="{{ teg_verification_url }}" class="btn btn-details">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                            <path d="M7.467.133a1 1 0 0 1 1.066 0l5 3.334a1 1 0 0 1 .467.84v4.892a3.5 3.5 0 0 1-1.553 2.91l-4.167 2.778a1 1 0 0 1-1.053 0l-4.167-2.778A3.5 3.5 0 0 1 2 9.199V4.307a1 1 0 0 1 .467-.84l5-3.334zM11.03 6.28a.75.75 0 0 0-1.06-1.06L7 8.189 6.03 7.22a.75.75 0 0 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0l3.5-3.5z"/>
+                        </svg>
+                        Vérifier TEG
+                    </a>
+                </div>
+            </div>
+
+            <div class="soumissions-table">
+                <div class="table-header">
+                    <h3>Informations Générales</h3>
+                    <span class="statut-badge statut-{{ fichier.statut|lower }}">{{ fichier.get_statut_display }}</span>
+                </div>
+
+                <div class="content-section">
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <h4>Informations du fichier</h4>
+                            <div class="info-item">
+                                <span class="info-label">Nom du fichier</span>
+                                <span class="info-value">{{ fichier.nom_fichier }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Établissement</span>
+                                <span class="info-value">{{ fichier.etablissement_cnef.Nom_etablissement }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Date d'import</span>
+                                <span class="info-value">{{ fichier.date_import|date:"d/m/Y H:i" }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Taille du fichier</span>
+                                <span class="info-value">{{ fichier.fichier.size|filesizeformat }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Total lignes importées</span>
+                                <span class="info-value highlight-value">{{ fichier.total_lignes_importees }}</span>
+                            </div>
+                        </div>
+
+                        <div class="info-card">
+                            <h4>Statistiques d'import</h4>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-value">{{ donnees_importees.credits }}</div>
+                                    <div class="stat-label">Crédits</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">{{ donnees_importees.decouverts }}</div>
+                                    <div class="stat-label">Découverts</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">{{ donnees_importees.affacturages }}</div>
+                                    <div class="stat-label">Affacturages</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">{{ donnees_importees.cautions }}</div>
+                                    <div class="stat-label">Cautions</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">{{ donnees_importees.effets }}</div>
+                                    <div class="stat-label">Effets</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">{{ donnees_importees.spot }}</div>
+                                    <div class="stat-label">Spots</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section des incohérences -->
+                        <div class="info-card incoherences-card">
+                            <h4>Incohérences Détectées</h4>
+                            {% if incoherences.total > 0 %}
+                            <div class="incoherence-summary">
+                                {% if incoherences.par_type.dates %}
+                                <div class="incoherence-stat">
+                                    <div class="number">{{ incoherences.par_type.dates }}</div>
+                                    <div class="label">Dates</div>
+                                </div>
+                                {% endif %}
+                                {% if incoherences.par_type.structure %}
+                                <div class="incoherence-stat">
+                                    <div class="number">{{ incoherences.par_type.structure }}</div>
+                                    <div class="label">Structure</div>
+                                </div>
+                                {% endif %}
+                                {% if incoherences.par_type.feuilles %}
+                                <div class="incoherence-stat">
+                                    <div class="number">{{ incoherences.par_type.feuilles }}</div>
+                                    <div class="label">Feuilles</div>
+                                </div>
+                                {% endif %}
+                                {% if incoherences.par_type.autres %}
+                                <div class="incoherence-stat">
+                                    <div class="number">{{ incoherences.par_type.autres }}</div>
+                                    <div class="label">Autres</div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="erreurs-list">
+                                <h5 style="margin-bottom: 15px; color: #721c24; font-size: 1rem;">Détail des erreurs :</h5>
+                                {% for erreur in incoherences.details %}
+                                    {% if forloop.counter <= 20 %}
+                                    <div class="erreur-item">
+                                        {{ erreur }}
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if incoherences.total > 20 %}
+                                <div style="text-align: center; margin-top: 15px; color: #856404; font-weight: 500;">
+                                    ... et {{ incoherences.total|add:"-20" }} autres erreur(s)
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="empty-state">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                                </svg>
+                                <p style="font-size: 1.1rem; font-weight: 500;">Aucune incohérence détectée</p>
+                                <p style="font-size: 0.9rem; margin-top: 10px;">Le fichier est prêt pour validation</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Détails supplémentaires si le fichier a été traité -->
+                    {% if fichier.details %}
+                    <div class="info-card" style="grid-column: 1 / -1;">
+                        <h4>Détails de traitement</h4>
+                        <div class="details-content">{{ fichier.details }}</div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Erreurs du système si présentes -->
+                    {% if fichier.erreurs %}
+                    <div class="info-card incoherences-card" style="grid-column: 1 / -1;">
+                        <h4>Erreurs système</h4>
+                        <div class="error-content">{{ fichier.erreurs }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions pour les fichiers en attente -->
+            {% if fichier.statut == 'EN_COURS' %}
+            <div class="actions-section">
+                <button class="btn btn-valider" onclick="validerFichier({{ fichier.id }})">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                        <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
+                    </svg>
+                    Valider et Importer
+                </button>
+                <button class="btn btn-rejeter" onclick="rejeterFichier({{ fichier.id }})">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                    </svg>
+                    Rejeter
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        // Animation pour les cartes d'information
+        document.addEventListener('DOMContentLoaded', function() {
+            const infoCards = document.querySelectorAll('.info-card');
+            infoCards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+
+        // Fonction pour ouvrir le modal de vérification TEG
+        function openTegModal(fichierId) {
+            const modal = document.getElementById('tegModal');
+            const chartsContainer = document.getElementById('tegCharts');
+            chartsContainer.innerHTML = '<p>Chargement des données...</p>';
+
+            modal.style.display = 'flex';
+
+            fetch(`/chef/teg-verification/${fichierId}/`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    chartsContainer.innerHTML = '';
+                    renderTegCharts(data.results);
+                } else {
+                    chartsContainer.innerHTML = `<p style="color: #721c24;">Erreur: ${data.message}</p>`;
+                }
+            })
+            .catch(error => {
+                chartsContainer.innerHTML = `<p style="color: #721c24;">Erreur lors du chargement: ${error}</p>`;
+            });
+        }
+
+        // Fonction pour fermer le modal
+        function closeTegModal() {
+            const modal = document.getElementById('tegModal');
+            modal.style.display = 'none';
+            const chartsContainer = document.getElementById('tegCharts');
+            chartsContainer.innerHTML = '';
+        }
+
+        // Fonction pour rendre les graphiques en anneau
+        function renderTegCharts(results) {
+            const chartsContainer = document.getElementById('tegCharts');
+            const chartTypes = [
+                { key: 'credits', label: 'Crédits Amortissables' },
+                { key: 'decouverts', label: 'Découverts' },
+                { key: 'affacturages', label: 'Affacturages' },
+                { key: 'cautions', label: 'Cautions' },
+                { key: 'effets', label: 'Effets de Commerce' },
+                { key: 'spots', label: 'Spots' }
+            ];
+
+            chartTypes.forEach(type => {
+                const data = results[type.key];
+                if (data.total > 0) {
+                    const container = document.createElement('div');
+                    container.className = 'chart-container';
+                    container.innerHTML = `<h5>${type.label}</h5><canvas id="${type.key}-chart"></canvas>`;
+                    chartsContainer.appendChild(container);
+
+                    new Chart(document.getElementById(`${type.key}-chart`), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Conforme', 'Non conforme'],
+                            datasets: [{
+                                data: [data.conforme, data.non_conforme],
+                                backgroundColor: ['#28a745', '#dc3545'],
+                                borderColor: ['#ffffff', '#ffffff'],
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                },
+                                title: {
+                                    display: true,
+                                    text: `Total: ${data.total}`
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        // Fonction pour valider un fichier
+        function validerFichier(fichierId) {
+            if (!confirm('Êtes-vous sûr de vouloir valider et importer ce fichier ?')) {
+                return;
+            }
+
+            const btn = event.target.closest('.btn-valider');
+            btn.disabled = true;
+            btn.innerHTML = '<span style="margin-right: 8px;">⏳</span> Traitement en cours...';
+
+            fetch(`/chef/valider/${fichierId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`✓ ${data.message}\n\nDétails:\n` +
+                        `- Crédits: ${data.details.credits}\n` +
+                        `- Découverts: ${data.details.decouverts}\n` +
+                        `- Affacturages: ${data.details.affacturages}\n` +
+                        `- Cautions: ${data.details.cautions}\n` +
+                        `- Spots: ${data.details.spot}\n` +
+                        `- Effets: ${data.details.effets}`
+                    );
+                    window.location.reload();
+                } else {
+                    alert(`✗ Erreur: ${data.message}`);
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg>Valider et Importer';
+                }
+            })
+            .catch(error => {
+                alert('✗ Erreur lors de la validation: ' + error);
+                btn.disabled = false;
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg>Valider et Importer';
+            });
+        }
+
+        // Fonction pour rejeter un fichier
+        function rejeterFichier(fichierId) {
+            const raison = prompt('Veuillez indiquer la raison du rejet:');
+            if (!raison) {
+                return;
+            }
+
+            const btn = event.target.closest('.btn-rejeter');
+            btn.disabled = true;
+            btn.innerHTML = '<span style="margin-right: 8px;">⏳</span> Traitement en cours...';
+
+            fetch(`/chef/rejeter/${fichierId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ raison: raison })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`✓ ${data.message}`);
+                    window.location.reload();
+                } else {
+                    alert(`✗ Erreur: ${data.message}`);
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;"><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>Rejeter';
+                }
+            })
+            .catch(error => {
+                alert('✗ Erreur lors du rejet: ' + error);
+                btn.disabled = false;
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;"><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>Rejeter';
+            });
+        }
+
+        // Fonction pour récupérer le cookie CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+    {% endblock %}
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    {% block content %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interface UEF</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/interface_uef.css' %}">
+    <link rel="stylesheet" href="{% static 'css/interface_aef.css' %}">
+    <link rel="stylesheet" href="{% static 'css/deconnexion.css' %}">
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            {% load static %}
+            <!-- Logo à gauche -->
+            <div class="logo-container logo-left">
+                <img src="{% static 'image/Congo.png' %}" alt="République du Congo" class="header-image">
+            </div>
+
+            <!-- Contenu central -->
+            <div class="header-center">
+                <div class="main-title">Comité National Économique et Financier<br> (CNEF)</div>
+                <hr class="separator">
+                <div class="sub-title">Banque des Etats de l'Afrique Centrale<br> (BEAC)</div>
+            </div>
+
+            <!-- Logo à droite -->
+            {% load static %}
+            <div class="logo-container logo-right">
+                <img src="{% static 'image/BEAC.png' %}" alt="BEAC" class="header-image">
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('profile')">Tableau de bord</button>
+            <button class="nav-tab" onclick="switchTab('upload')">Soumettre le fichier</button>
+        </div>
+
+        <div class="tab-content">
+            <!-- Onglet Profil -->
+            <div id="profile" class="tab-pane active">
+                <h2>Profil</h2>          
+                <div class="profile-container">
+                    <!-- Informations du profil réduites -->
+                    <div class="profile-info">
+                        <div class="profile-section">
+                            <h3>Informations Personnelles</h3>
+                            <div class="info-item">
+                                <span class="info-label">Nom:</span>
+                                <span class="info-value" id="userName">{{ user.nom }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Prénom:</span>
+                                <span class="info-value" id="userPrenom">{{ user.prenom }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Téléphone:</span>
+                                <span class="info-value" id="userTelephone">{{ user.telephone }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Email:</span>
+                                <span class="info-value" id="userEmail">{{ user.email}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Historique des téléchargements avec barre de défilement -->
+                    <div class="profile-history">
+                        <div class="history-header">
+                            <h3>Historique des Téléchargements</h3>
+                        </div>
+                        <div class="history-container" id="profileHistoryList">
+                            <!-- L'historique sera généré dynamiquement ici -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+             <!-- ========== ONGLET 2 : Onglet Téléchargement ========== -->
+            <div id="upload" class="tab-pane">
+                <div class="upload-container">
+                    <h2>Soumettre le fichier</h2>
+                    <div class="upload-card">
+                        <form id="form-upload-fichier" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <div class="upload-zone" id="dropZone">
+                                <div class="upload-icon">
+                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                </div>
+                                <h3 class="upload-zone-title">Glissez ou déposez votre fichier ici</h3>
+                                <p class="upload-zone-text">ou</p>
+                                <label for="fichier" class="upload-btn-label">
+                                    <span>Parcourir les fichiers</span>
+                                    <input type="file" id="fichier" name="fichier" accept=".xlsx,.xls" required onchange="handleFileSelectForPreview(this.files)">
+                                </label>
+                                <p class="upload-zone-info">Formats .xlsx, .xls </p>
+                            </div>
+
+                            <div class="file-selected" id="fileSelected" style="display: none;">
+                                <!-- Partie gauche : infos du fichier -->
+                                <div class="file-info">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                    </svg>
+                                    <div class="file-details">
+                                        <p class="file-name" id="fileName"></p>
+                                        <p class="file-size" id="fileSize"></p>
+                                    </div>
+                                    <button type="button" class="file-remove" onclick="removeFile()">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                <!-- Partie droite : bouton soumettre -->
+                                <button type="submit" class="btn-submit" id="submitBtn" style="display: none;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    <span>Soumettre le fichier</span>
+                                </button>
+                            </div>
+                        </form>
+                        <div id="upload-result"></div>
+                    </div>
+
+                    <!-- Section de prévisualisation -->
+                    <div class="preview-section" id="previewSection">
+                        <div class="preview-header">
+                            <h3 class="preview-title">Aperçu de la Base de Données</h3>
+                            <div class="sheet-selector" id="sheetSelector" style="display: none;">
+                                <label for="sheetSelect" class="sheet-label">Feuille :</label>
+                                <select id="sheetSelect" class="sheet-select" onchange="changeSheet()"></select>
+                            </div>
+                        </div>
+                        
+                        <div class="preview-info" id="previewInfo"></div>
+                        
+                        <!-- Zone de prévisualisation avec barre de défilement horizontale et verticale -->
+                        <div class="preview-table-wrapper">
+                            <div class="preview-content" id="previewContent">
+                                <!-- Le tableau sera généré ici par JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- Bouton flottant de déconnexion draggable -->
+    <div id="logoutBubble" class="logout-bubble" title="Se déconnecter">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+    </div>
+    <script src="{% static 'js/interface_uef.js' %}"></script>
+    <script src="{% static 'js/deconnexion.js' %}"></script>
+    {% endblock %}
+</body>
+</html>

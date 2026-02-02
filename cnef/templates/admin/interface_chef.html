@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSRF Token pour JavaScript -->
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Administrateur</title>
+    {% load static %}
+    
+    <!-- Import des fichiers CSS -->
+    <link rel="stylesheet" href="{% static 'css/interface_chef.css' %}">
+    <link rel="stylesheet" href="{% static 'css/deconnexion.css' %}">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'image/Congo.png' %}">
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <!-- Logo à gauche -->
+            <div class="logo-container logo-left">
+                <img src="{% static 'image/Congo.png' %}" alt="République du Congo" class="header-image">
+            </div>
+
+            <!-- Contenu central -->
+            <div class="header-center">
+                <div class="main-title">Comité National Économique et Financier<br> (CNEF)</div>
+                <hr class="separator">
+                <div class="sub-title">Banque des Etats de l'Afrique Centrale<br> (BEAC)</div>
+            </div>
+
+            <!-- Logo à droite -->
+            <div class="logo-container logo-right">
+                <img src="{% static 'image/BEAC.png' %}" alt="BEAC" class="header-image">
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab" onclick="switchTab('overview')">Vue d'Ensemble</button>
+            <button class="nav-tab" onclick="switchTab('analytics')">Analyses</button>
+            <button class="nav-tab active" onclick="switchTab('submissions')">
+                Soumissions <span id="badge-soumissions-attente" style="background: #3be411ff; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75em; margin-left: 6px; font-weight: bold;">{{ stats.en_attente }}</span>
+            </button>
+            <button class="nav-tab" onclick="switchTab('downloads')">Téléchargements</button>
+            <button class="nav-tab" onclick="switchTab('bases_donnees')">Base de données</button>
+
+            <!-- Onglets visibles uniquement pour ACNEF -->
+            {% if request.user.is_acnef or request.user.is_superuser %}
+            <button class="nav-tab" onclick="switchTab('etablissements')">Établissements</button>
+            <div class="nav-dropdown">
+                <button class="nav-dropdown-btn">
+                    <i class="fas fa-users"></i>
+                    Gestion Utilisateurs
+                    <i class="fas fa-caret-down"></i>
+                </button>
+                <div class="nav-dropdown-content">
+                    <button class="nav-dropdown-item" onclick="switchTab('utilisateurs')">
+                        <i class="fas fa-user-cog"></i>
+                        Utilisateurs
+                    </button>
+                    <button class="nav-dropdown-item" onclick="switchTab('historique-emails')">
+                        <i class="fas fa-envelope-open-text"></i>
+                        Historique Emails
+                    </button>
+                </div>
+            </div>
+            <button class="nav-tab" onclick="switchTab('journalisation')">Journalisation</button>
+            {% endif %}
+        </div>
+
+        <div class="tab-content">
+            <!-- Vue d'Ensemble -->
+            <div id="overview" class="tab-pane">
+                <h2>Vue d'Ensemble des Données</h2>
+            </div>
+
+            <!-- Analyses -->
+            <div id="analytics" class="tab-pane">
+                <h2>Analyses Avancées</h2>
+                <!-- Bouton pour accéder aux communiqués de presse -->
+                <div style="margin-top: 16px; display: flex; justify-content: center;">
+                    <a 
+                        href="{% url 'communique_presse' %}" 
+                        style="
+                        display: inline-flex;
+                        align-items: center;
+                        padding: 12px 24px;
+                        background-color: #4f46e5;
+                        color: white;
+                        font-weight: 600;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                        text-decoration: none;
+                        transition: all 0.3s ease-in-out;
+                        "
+                        onmouseover="this.style.backgroundColor='#4338ca'; this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.15);'"
+                        onmouseout="this.style.backgroundColor='#4f46e5'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1);'"
+                        aria-label="Voir les communiqués de presse"
+                    >
+                        <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Voir les Communiqués de Presse
+                    </a>
+                </div>
+            </div>
+
+            <!-- Gestion des soumissions -->
+            <div id="submissions" class="tab-pane active">
+                <div class="dashboard-container">
+                    <h1>Gestion des soumissions</h1>
+                    <p></p>
+                    <!-- Cartes de statistiques -->
+                    <div class="stats-cards">
+                        <div class="stat-card-soumission total" onclick="filterByStatut('tous')">
+                            <div>Total des soumissions</div>
+                            <div class="stat-number-soumission">{{ stats.total }}</div>
+                        </div>
+                        <div class="stat-card-soumission en-attente" onclick="filterByStatut('EN_COURS')">
+                            <div>En attente</div>
+                            <div class="stat-number-soumission">{{ stats.en_attente }}</div>
+                        </div>
+                        <div class="stat-card-soumission reussi" onclick="filterByStatut('REUSSI')">
+                            <div>Réussis</div>
+                            <div class="stat-number-soumission">{{ stats.reussis }}</div>
+                        </div>
+                        <div class="stat-card-soumission erreur" onclick="filterByStatut('ERREUR')">
+                            <div>Erreur</div>
+                            <div class="stat-number-soumission">{{ stats.erreur }}</div>
+                        </div>
+                        <!-- NOUVEAU: Carte pour les rejets -->
+                        <div class="stat-card-soumission rejete" onclick="filterByStatut('REJETE')">
+                            <div>Rejetés</div>
+                            <div class="stat-number-soumission">{{ stats.rejetes }}</div>
+                        </div>
+                    </div>
+                 
+                    <!-- Filtres -->
+                    <div class="filters-container">
+                        <form method="get" id="filterForm">
+                            <div class="filters-soumission">
+                                <div class="filter-group-soumission">
+                                    <label for="statut">Statut</label>
+                                    <select name="statut" id="statut" class="filter-select-soumission" onchange="submitFormAndStay()">
+                                        <option value="tous" {% if statut_filter == 'tous' %}selected{% endif %}>Tous les statuts</option>
+                                        <option value="EN_COURS" {% if statut_filter == 'EN_COURS' %}selected{% endif %}>En attente</option>
+                                        <option value="REUSSI" {% if statut_filter == 'REUSSI' %}selected{% endif %}>Réussis</option>
+                                        <option value="ERREUR" {% if statut_filter == 'ERREUR' %}selected{% endif %}>Erreur</option>
+                                        <option value="REJETE" {% if statut_filter == 'REJETE' %}selected{% endif %}>Rejeté</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group-soumission">
+                                    <label for="etablissement">Établissement</label>
+                                    <select name="etablissement" id="etablissement" class="filter-select-soumission" onchange="submitFormAndStay()">
+                                        <option value="tous" {% if etablissement_filter == 'tous' %}selected{% endif %}>Tous les établissements</option>
+                                        <option value="BANQUE" {% if etablissement_filter == 'BANQUE' %}selected{% endif %}>BANQUE</option>
+                                        <option value="EMF" {% if etablissement_filter == 'EMF' %}selected{% endif %}>EMF</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>                   
+                    <!-- Tableau des soumissions -->
+                    <div class="soumissions-table">
+                        <div class="table-header">
+                            <h3 style="margin: 0;">Soumissions récentes</h3>
+                            <span>{{ fichiers.count }} fichier(s)</span>
+                        </div>
+                        
+                        <!-- En-tête du tableau -->
+                        <div class="soumission-item soumission-header">
+                            <div>Fichier & Établissement</div>
+                            <div>Date</div>
+                            <div>Statut</div>
+                            <div>Lignes importées</div>
+                            <div>Actions</div>
+                        </div>
+                        
+                        <!-- Liste des soumissions -->
+                        {% for fichier in fichiers %}
+                        <div class="soumission-item" id="soumission-{{ fichier.id }}">
+                            <div>
+                                <strong>{{ fichier.nom_fichier }}</strong><br>
+                                <small>
+                                    {% if fichier.etablissement_cnef %}
+                                        {{ fichier.etablissement_cnef.Nom_etablissement }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div>{{ fichier.date_import|date:"d/m/Y H:i" }}</div>
+                            <div>
+                                <span class="statut-badge statut-{{ fichier.statut|lower }}">
+                                    {{ fichier.get_statut_display }}
+                                </span>
+                            </div>
+                            <div>{{ fichier.total_lignes_importees }}</div>
+                            <div class="action-buttons">
+                                <a href="{% url 'detail_soumission' fichier.id %}" class="btn btn-details">
+                                    Détails
+                                </a>
+                                {% if fichier.statut == 'EN_COURS' %}
+                                <button class="btn btn-valider" onclick="validerSoumission({{ fichier.id }})">
+                                    Valider
+                                </button>
+                                <button class="btn btn-rejeter" onclick="rejeterFichier({{ fichier.id }}, '{{ fichier.nom_fichier|escapejs }}')">
+                                    Rejeter
+                                </button>
+                                {% else %}
+                                <button class="btn" disabled>Traité</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="soumission-item" style="text-align: center; padding: 30px;">
+                            Aucune soumission trouvée
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Loading indicator -->
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Traitement en cours...</p>
+                </div>
+            </div>
+
+            <!-- Bouton flottant de déconnexion draggable -->
+            <div id="logoutBubble" class="logout-bubble" title="Se déconnecter">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </div>
+            <!-- Téléchargements -->
+            <div id="downloads" class="tab-pane">
+                <h2>Gestion des téléchargements</h2>
+                <p></p>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nom du fichier</th>
+                            <th>Utilisateur</th>
+                            <th>Date de soumission</th>
+                            <th>Taille</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="filesTable">
+                        <!-- Données générées dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Base de données -->
+            <div id="bases_donnees" class="tab-pane">
+                <div class="bases-donnees-container">
+                    <h2>Visualisation des Bases de Données</h2>
+                    
+                    <div class="bases-layout">
+                        <!-- Sidebar avec les modèles -->
+                        <div class="modeles-sidebar">
+                            <h3>Bases disponibles</h3>
+                            <div class="modeles-list">
+                                <button class="modele-btn" onclick="chargerModele('Credit_Amortissables')">
+                                    Crédits Amortissables
+                                </button>
+                                <button class="modele-btn" onclick="chargerModele('Decouverts')">
+                                    Découverts
+                                </button>
+                                <button class="modele-btn" onclick="chargerModele('Affacturage')">
+                                    Affacturage
+                                </button>
+                                <button class="modele-btn" onclick="chargerModele('Cautions')">
+                                    Cautions
+                                </button>
+                                <button class="modele-btn" onclick="chargerModele('Effets_commerces')">
+                                    Effets de Commerce
+                                </button>
+                                <button class="modele-btn" onclick="chargerModele('Spots')">
+                                    Spots
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Zone d'affichage des données -->
+                        <div class="donnees-container">
+                            <div id="donnees-header" class="donnees-header" style="display: none;">
+                                <div class="titre-modele-container">
+                                    <h3 id="titre-modele"></h3>
+                                    <!-- Bouton Télécharger ajouté ici -->
+                                    <button class="btn-telecharger" onclick="telechargerDonneesExcel()">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="9"/>
+                                            <line x1="12" y1="6" x2="12" y2="14"/>
+                                            <polyline points="9 11 12 14 15 11"/>
+                                        </svg>
+                                        Télécharger en Excel
+                                    </button>
+                                </div>
+                                
+                                <!-- Barre de filtres -->
+                                <div class="filtres-actions">
+                                    <div class="filtres-group">
+                                        <div class="filter-group-soumission">
+                                            <label for="filtre-sigle">Etablissements</label>
+                                            <select id="filtre-sigle" class="filter-select-soumission" onchange="appliquerFiltres()">
+                                                <option value="">Tous les établissements</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="filter-group-soumission">
+                                            <label for="filtre-mois">Mois</label>
+                                            <select id="filtre-mois" class="filter-select-soumission" onchange="appliquerFiltres()">
+                                                <option value="">Tous les mois</option>
+                                                <option value="01">Janvier</option>
+                                                <option value="02">Février</option>
+                                                <option value="03">Mars</option>
+                                                <option value="04">Avril</option>
+                                                <option value="05">Mai</option>
+                                                <option value="06">Juin</option>
+                                                <option value="07">Juillet</option>
+                                                <option value="08">Août</option>
+                                                <option value="09">Septembre</option>
+                                                <option value="10">Octobre</option>
+                                                <option value="11">Novembre</option>
+                                                <option value="12">Décembre</option>
+                                            </select>
+                                        </div>
+        
+                                        <div class="filter-group-soumission">
+                                            <label for="filtre-annee">Année</label>
+                                            <select id="filtre-annee" class="filter-select-soumission" onchange="appliquerFiltres()">
+                                                <option value="">Toutes les années</option>
+                                            </select>
+                                        </div>                                        
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Zone d'affichage des données -->
+                            <div id="donnees-content" class="donnees-content">
+                                <div class="placeholder-message">
+                                    <p>Sélectionnez la base de données dans la barre latérale pour afficher les données</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ==========================================
+                GESTION DES ÉTABLISSEMENTS (ACNEF)
+            ========================================== -->
+            {% if request.user.is_acnef or request.user.is_superuser %}
+            <!-- Conteneur principal -->
+            <div id="etablissements" class="tab-pane">
+                <!-- En-tête --> 
+                <div class="card-etablissement">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2 style="margin: 0;">Gestion des établissements financiers</h2>
+                        </div>
+                        <button class="btn-primary" onclick="ouvrirModalCreation()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                                <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5V7.5H14a.5.5 0 0 1 0 1H8.5V14a.5.5 0 0 1-1 0V8.5H2a.5.5 0 0 1 0-1h5.5V1.5A.5.5 0 0 1 8 1z"/>
+                            </svg>
+                            Nouvel Établissement
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- ========================================
+                    STATISTIQUES DES ÉTABLISSEMENTS
+                ======================================== -->
+                <div class="stats-grid" style="margin-top: 20px;">
+                    <div class="stat-card">
+                        <span class="stat-number" id="stats-total-etablissements">0</span>
+                        <span class="stat-label">Total Établissements</span>
+                    </div>
+                    <div class="stat-card success">
+                        <span class="stat-number" id="stats-total-banques">0</span>
+                        <span class="stat-label">Banques</span>
+                    </div>
+                    <div class="stat-card purple">
+                        <span class="stat-number" id="stats-total-emf">0</span>
+                        <span class="stat-label">EMF</span>
+                    </div>
+                    <div class="stat-card warning">
+                        <span class="stat-number" id="stats-etablissements-actifs">0</span>
+                        <span class="stat-label">Actifs</span>
+                    </div>
+                </div>
+
+                <!-- ========================================
+                    FILTRES DES ÉTABLISSEMENTS
+                ======================================== -->
+                <div class="filters-container" style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 20px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Type d'établissement</label>
+                            <select id="filtre-type-etablissement" onchange="chargerEtablissements()" class="filter-select">
+                                <option value="">Tous les types</option>
+                                <option value="BANQUE">Banque</option>
+                                <option value="EMF">EMF</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Catégorie EMF</label>
+                            <select id="filtre-categorie-emf" onchange="chargerEtablissements()" class="filter-select">
+                                <option value="">Toutes les catégories</option>
+                                <option value="PREMIERE_CATEGORIE">1ère Catégorie</option>
+                                <option value="DEUXIEME_CATEGORIE">2ème Catégorie</option>
+                                <option value="TROISIEME_CATEGORIE">3ème Catégorie</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Statut</label>
+                            <select id="filtre-statut-etablissement" onchange="chargerEtablissements()" class="filter-select">
+                                <option value="">Tous les statuts</option>
+                                <option value="true">Actifs</option>
+                                <option value="false">Inactifs</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Rechercher</label>
+                            <input type="text" id="recherche-etablissement" placeholder="Nom, code..." 
+                                onkeyup="rechercherEtablissement()" class="filter-input"
+                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                    </div>
+                </div>
+                <!-- Message d'alerte -->
+                <div id="alertContainer"></div>
+
+                <!-- Liste des établissements -->
+                <div class="card-etablissement">
+                    <div class="table-responsive">
+                        <table class="data-table" id="tableEtablissements">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Nom</th>
+                                    <th>Type</th>
+                                    <th>Catégorie</th>
+                                    <th>Utilisateurs</th>
+                                    <th>Statut</th>
+                                    <th>Date création</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listeEtablissements">
+                                <!-- Rempli dynamiquement -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de création -->
+            <div id="modalCreation" class="nebula-modal">
+                <div class="stellar-card">
+                    <div class="cosmo-header">
+                        <h2>Nouvel Établissement</h2>
+                        <span class="nebula-close" onclick="fermerModalCreation()">&times;</span>
+                    </div>
+                    <form id="formCreation" class="astro-form" onsubmit="creerEtablissement(event)">
+                        <div class="orbit-group">
+                            <label for="Nom_etablissement">Nom de l'établissement *</label>
+                            <input type="text" class="lunar-input" id="Nom_etablissement" required placeholder="Ex: UBA Congo">
+                        </div>
+                        <div class="orbit-group">
+                            <label for="code_etablissement">Code établissement *</label>
+                            <input type="text" class="lunar-input" id="code_etablissement" required placeholder="Ex: 3293001" maxlength="50">
+                        </div>
+                        <div class="orbit-group">
+                            <label for="type_etablissement">Type d'établissement *</label>
+                            <select class="lunar-select" id="type_etablissement" required onchange="toggleCategorieEMF()">
+                                <option value="">-- Sélectionnez --</option>
+                                <option value="BANQUE">Banque</option>
+                                <option value="EMF">Établissement de Microfinance (EMF)</option>
+                            </select>
+                        </div>
+                        <div class="orbit-group" id="categorieGroup" style="display: none;">
+                            <label for="categorie_emf">Catégorie EMF *</label>
+                            <select class="lunar-select" id="categorie_emf">
+                                <option value="">-- Sélectionnez --</option>
+                                <option value="PREMIERE_CATEGORIE">1re Catégorie</option>
+                                <option value="DEUXIEME_CATEGORIE">2e Catégorie</option>
+                                <option value="TROISIEME_CATEGORIE">3e Catégorie</option>
+                            </select>
+                        </div>
+                        <div class="galaxy-actions">
+                            <button type="submit" class="btn-nebula-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-4 4.5a.75.75 0 0 1-1.08 0l-2-2.25a.75.75 0 1 1 1.12-1L7.5 8.9l3.47-3.93z"/>
+                                </svg>
+                                Créer l'établissement
+                            </button>
+                            <button type="button" class="btn-nebula-cancel" onclick="fermerModalCreation()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                                </svg>
+                                Annuler
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal de détails -->
+            <div id="modalDetails" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="detailsNom"></h2>
+                        <span class="close" onclick="fermerModalDetails()">&times;</span>
+                    </div>
+                    <div id="detailsContent">
+                        <!-- Rempli dynamiquement -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de confirmation de suppression -->
+            <div id="modalConfirmationSuppression" class="modal-suppression">
+                <div class="modal-suppression-content">
+                    <div class="modal-suppression-header">
+                        <div class="icon-warning">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                            </svg>
+                        </div>
+                        <h2> Confirmation de suppression</h2>
+                    </div>
+                    <div class="modal-suppression-body">
+                        <p class="warning-text">Vous êtes sur le point de supprimer l'établissement :</p>
+                        <p class="etablissement-nom" id="nomEtablissementSuppr"></p>
+                        <div class="danger-zone">
+                            <p><strong> ATTENTION : Cette action est IRRÉVERSIBLE !</strong></p>
+                            <ul class="consequences-list">
+                                <li>L'établissement sera définitivement supprimé</li>
+                                <li>Tous les utilisateurs associés seront également supprimés</li>
+                                <li>Toutes les données liées seront perdues</li>
+                            </ul>
+                        </div>
+                        <p class="confirmation-question">Êtes-vous absolument certain de vouloir continuer ?</p>
+                    </div>
+                    <div class="modal-suppression-footer">
+                        <button class="btn-cancel-suppression" onclick="fermerModalConfirmationSuppression()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                            </svg>
+                            Non, annuler
+                        </button>
+                        <button class="btn-confirm-suppression" id="btnConfirmerSuppression" onclick="confirmerSuppressionEtablissement()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                            </svg>
+                            Oui, supprimer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                GESTION DES UTILISATEURS (ACNEF)
+            ========================================== -->
+            <div id="utilisateurs" class="tab-pane">
+                <div class="section-header">
+                    <h2><i class="fas fa-users"></i> Gestion des Utilisateurs</h2>
+                    <button class="btn-primary" onclick="ouvrirModalInvitation()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                            <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5V7.5H14a.5.5 0 0 1 0 1H8.5V14a.5.5 0 0 1-1 0V8.5H2a.5.5 0 0 1 0-1h5.5V1.5A.5.5 0 0 1 8 1z"/>
+                        </svg>
+                        Ajouter un utilisateur
+                    </button>
+                </div>
+
+                <!-- Statistiques utilisateurs -->
+                <div class="stats-grid" style="margin-top: 20px;">
+                    <div class="stat-card">
+                        <span class="stat-number" id="stats-total-utilisateurs">0</span>
+                        <span class="stat-label">Total utilisateurs</span>
+                    </div>
+                    <div class="stat-card success">
+                        <span class="stat-number" id="stats-utilisateurs-actifs">0</span>
+                        <span class="stat-label">Actifs</span>
+                    </div>
+                    <div class="stat-card warning">
+                        <span class="stat-number" id="stats-utilisateurs-inactifs">0</span>
+                        <span class="stat-label">Inactifs</span>
+                    </div>
+                    <div class="stat-card purple">
+                        <span class="stat-number" id="stats-utilisateurs-etablissement">0</span>
+                        <span class="stat-label">Utilisateurs établissement</span>
+                    </div>
+                </div>
+
+                <!-- Filtres -->
+                <div class="filters-container" style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 20px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Rôle</label>
+                            <select id="filtre-role-utilisateur" onchange="chargerUtilisateurs()" class="filter-select">
+                                <option value="">Tous les rôles</option>
+                                <option value="ACNEF">Administrateur CNEF</option>
+                                <option value="UCNEF">Utilisateur CNEF</option>
+                                <option value="AEF">Administrateur Établissement</option>
+                                <option value="UEF">Utilisateur Établissement</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Établissement</label>
+                            <select id="filtre-etablissement-utilisateur" onchange="chargerUtilisateurs()" class="filter-select">
+                                <option value="">Tous les établissements</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Statut</label>
+                            <select id="filtre-actif-utilisateur" onchange="chargerUtilisateurs()" class="filter-select">
+                                <option value="">Tous</option>
+                                <option value="true">Actifs</option>
+                                <option value="false">Inactifs</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Rechercher</label>
+                            <input type="text" id="recherche-utilisateur" placeholder="Nom, prénom, email..." 
+                                onkeyup="rechercherUtilisateur()" class="filter-input"
+                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tableau des utilisateurs -->
+                <div class="table-container" style="overflow-x: auto; margin-top: 20px;">
+                    <table class="data-table" id="table-utilisateurs">
+                        <thead>
+                            <tr>
+                                <th>Nom complet</th>
+                                <th>Email</th>
+                                <th>Rôle</th>
+                                <th>Établissement</th>
+                                <th>Téléphone</th>
+                                <th>Statut</th>
+                                <th>Date création</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-utilisateurs">
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 2em; color: #3498db;"></i>
+                                    <p style="margin-top: 10px; color: #7f8c8d;">Chargement des utilisateurs...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!--pagination-->
+                <div id="pagination-utilisateurs" style="margin-top: 20px; text-align: center;"></div>
+                
+                <!-- NOUVEAU : Tableau invitations -->
+                <div style="margin-top: 40px;">
+                    <h3 style="color: #2c3e50; margin-bottom: 20px;">
+                        <i class="fas fa-envelope"></i> Invitations en attente
+                        <span id="count-invitations" style="background: #3498db; color: white; padding: 4px 12px; border-radius: 15px; font-size: 0.9em; margin-left: 10px;">0</span>
+                    </h3>
+                    <div class="table-container">
+                        <table class="data-table" id="table-invitations">
+                            <thead>
+                                <tr>
+                                    <th>Rôle</th>
+                                    <th>Email</th>
+                                    <th>Établissement</th>
+                                    <th>Date création</th>
+                                    <th>Expiration</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-invitations">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 40px;">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Chargement...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal d'invitation -->
+            <div id="modalInvitation" class="modal-invitation">
+                <div class="modal-invitation-content">
+                    <div class="modal-invitation-header">
+                        <h2>Inviter un nouvel utilisateur</h2>
+                        <span class="close" onclick="fermerModalInvitation()">&times;</span>
+                    </div>
+                    
+                    <div class="modal-invitation-body">
+                        <!-- Sélection du rôle -->
+                        <div class="form-group-invitation">
+                            <label>Sélectionnez le rôle *</label>
+                            <div class="role-selector">
+                                <div class="role-option" data-role="ACNEF" onclick="selectionnerRole('ACNEF')">
+                                    <h4>👑 ACNEF</h4>
+                                    <p>Administrateur CNEF</p>
+                                </div>
+                                <div class="role-option" data-role="UCNEF" onclick="selectionnerRole('UCNEF')">
+                                    <h4>👤 UCNEF</h4>
+                                    <p>Utilisateur CNEF</p>
+                                </div>
+                                <div class="role-option" data-role="AEF" onclick="selectionnerRole('AEF')">
+                                    <h4>🏦 AEF</h4>
+                                    <p>Admin Établissement</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formulaire -->
+                        <form id="formInvitation" onsubmit="genererInvitation(event)">
+                            <!-- Email -->
+                            <div class="form-group-invitation">
+                                <label for="emailDestinataire">Adresse e-mail du destinataire *</label>
+                                <input 
+                                    type="email" 
+                                    id="emailDestinataire" 
+                                    placeholder="exemple@email.com"
+                                    required
+                                >
+                            </div>
+
+                            <!-- Établissement (affiché seulement si AEF) -->
+                            <div class="form-group-invitation" id="etablissementGroup" style="display: none;">
+                                <label for="etablissementSelect">Établissement *</label>
+                                <select id="etablissementSelect">
+                                    <option value="">-- Sélectionnez un établissement --</option>
+                                    <!-- Rempli dynamiquement -->
+                                </select>
+                            </div>
+
+                            <!-- Bouton de génération -->
+                            <button type="submit" class="btn-generer" id="btnGenerer" disabled>
+                                🔗 Générer le lien d'invitation
+                            </button>
+                        </form>
+
+                        <!-- Zone d'affichage du lien -->
+                        <div id="lienContainer" class="lien-container">
+                            <div class="success-icon">✅</div>
+                            <h3 style="text-align: center; color: #27ae60; margin-bottom: 15px;">
+                                Lien généré avec succès !
+                            </h3>
+                            
+                            <p style="margin-bottom: 10px;">
+                                <strong>Destinataire :</strong> <span id="displayEmail"></span><br>
+                                <strong>Rôle :</strong> <span id="displayRole"></span><br>
+                                <span id="displayEtablissement"></span>
+                            </p>
+
+                            <div class="lien-display" id="lienDisplay"></div>
+
+                            <div style="text-align: center; margin-top: 15px;">
+                                <button class="btn-copy" onclick="copierLien()">
+                                    📋 Copier le lien
+                                </button>
+                                <button class="btn-whatsapp" onclick="envoyerViaWhatsApp()">
+                                    📱 Envoyer via WhatsApp
+                                </button>
+                            </div>
+
+                            <div class="info-box">
+                                ⏰ <strong>Attention :</strong> Ce lien expire dans <strong id="tempsRestant"></strong> minutes.<br>
+                                Le destinataire doit l'utiliser avant expiration.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================
+                ONGLET HISTORIQUE DES EMAILS
+            ======================================== -->
+            <div id="historique-emails" class="tab-pane">
+                <div class="section-header">
+                    <h2><i class="fas fa-envelope-open-text"></i> Historique des Emails</h2>
+                </div>
+                
+                <!-- Filtres -->
+                <div class="filters-container" style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 20px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">
+                                <i class="fas fa-filter"></i> Type d'email
+                            </label>
+                            <select id="filter-type-email" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">Tous les types</option>
+                                <option value="INVITATION">Invitation</option>
+                                <option value="VALIDATION">Validation</option>
+                                <option value="REJET">Rejet</option>
+                                <option value="NOTIFICATION_ACNEF">Notification ACNEF</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label style="font-weight: 600; margin-bottom: 8px; display: block; color: #333;">
+                                <i class="fas fa-search"></i> Recherche dans l'objet
+                            </label>
+                            <input type="text" 
+                                   id="filter-objet-email" 
+                                   class="form-control" 
+                                   placeholder="Tapez pour rechercher..." 
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div class="col-md-2">
+                            <label style="display: block; margin-bottom: 8px;">&nbsp;</label>
+                            <button class="btn btn-primary" 
+                                    onclick="filtrerHistoriqueEmails()" 
+                                    style="width: 100%; background-color: #3498db; border: none; padding: 10px; border-radius: 4px; font-weight: 600; cursor: pointer;">
+                                <i class="fas fa-filter"></i> Filtrer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Statistiques rapides -->
+                <div class="stats-grid" style="margin-top: 20px;">
+                    <div class="stat-card purple">
+                        <span class="stat-number" id="stats-total-emails">0</span>
+                        <span class="stat-label">Total emails</span>
+                    </div>
+                    <div class="stat-card success">
+                        <span class="stat-number" id="stats-emails-envoyes">0</span>
+                        <span class="stat-label">Envoyés</span>
+                    </div>
+                    <div class="stat-card warning">
+                        <span class="stat-number" id="stats-emails-echec">0</span>
+                        <span class="stat-label">Échecs</span>
+                    </div>
+                    <div class="stat-card purple">
+                        <span class="stat-number" id="stats-emails-today">0</span>
+                        <span class="stat-label">Aujourd'hui</span>
+                    </div>
+                </div>
+                
+                <!-- Table historique -->
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow-x: auto;">
+                    <table class="table table-hover" style="width: 100%; margin-bottom: 0;">
+                        <thead style="background-color: #f8f9fa;">
+                            <tr>
+                                <th style="padding: 12px; font-weight: 600; color: #333; border-bottom: 2px solid #dee2e6;">
+                                    <i class="fas fa-calendar-alt"></i> Date
+                                </th>
+                                <th style="padding: 12px; font-weight: 600; color: #333; border-bottom: 2px solid #dee2e6;">
+                                    <i class="fas fa-tag"></i> Type
+                                </th>
+                                <th style="padding: 12px; font-weight: 600; color: #333; border-bottom: 2px solid #dee2e6;">
+                                    <i class="fas fa-user"></i> Destinataire
+                                </th>
+                                <th style="padding: 12px; font-weight: 600; color: #333; border-bottom: 2px solid #dee2e6;">
+                                    <i class="fas fa-envelope"></i> Objet
+                                </th>
+                                <th style="padding: 12px; font-weight: 600; color: #333; border-bottom: 2px solid #dee2e6;">
+                                    <i class="fas fa-check-circle"></i> Statut
+                                </th>
+                                <th style="padding: 12px; text-align: center; font-weight: 600; color: #333; border-bottom: 2px solid #dee2e6;">
+                                    <i class="fas fa-cogs"></i> Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="historique-emails-tbody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 60px; color: #6c757d;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 48px; margin-bottom: 15px; color: #3498db;"></i><br>
+                                    <strong style="font-size: 18px;">Chargement des emails...</strong><br>
+                                    <small style="color: #999;">Veuillez patienter</small>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Info si aucun email -->
+                <div id="info-aucun-email" style="display: none; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 20px; margin-top: 20px;">
+                    <i class="fas fa-info-circle" style="color: #856404; margin-right: 10px;"></i>
+                    <strong style="color: #856404;">Aucun email envoyé pour le moment.</strong><br>
+                    <small style="color: #856404;">Les emails apparaîtront ici dès que vous générerez des invitations ou validerez/rejetterez des fichiers.</small>
+                </div>
+            </div>
+            
+            <!-- ==========================================
+                JOURNALISATION GLOBALE (ACNEF)
+            ========================================== -->
+            <div id="journalisation" class="tab-pane">
+                <div class="section-header">
+                    <h2><i class="fas fa-clipboard-list"></i> Journalisation des actions</h2>
+                    <button class="btn-primary" onclick="exporterJournalisationCSV()">
+                        <i class="fas fa-download"></i> Exporter en CSV
+                    </button>
+                    <button onclick="ouvrirModalSupprimerJournal()" style="background: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
+                        <i class="fas fa-trash-alt"></i> Supprimer journal
+                    </button>
+                </div>
+
+                <!-- Modal Supprimer Journal -->
+                <div id="modalSupprimerJournal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center;">
+                    <div style="background: white; padding: 30px; border-radius: 15px; max-width: 600px; width: 90%;">
+                        <h2 style="margin-bottom: 20px;"><i class="fas fa-trash-alt"></i> Supprimer les journaux</h2>
+                        
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <p style="margin: 0; color: #856404; font-weight: 600;"> Action IRRÉVERSIBLE !</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label><input type="radio" name="modeSuppression" value="intervalle" checked> Supprimer un intervalle</label><br>
+                            <label><input type="radio" name="modeSuppression" value="avant"> Supprimer tout avant une date</label>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label>Date début:</label>
+                            <input type="datetime-local" id="dateDebutSuppression" style="width: 100%; padding: 10px; margin-top: 5px;" onchange="calculerNombreSupprimer()">
+                        </div>
+                        
+                        <div id="dateFinContainer" style="margin-bottom: 20px;">
+                            <label>Date fin:</label>
+                            <input type="datetime-local" id="dateFinSuppression" style="width: 100%; padding: 10px; margin-top: 5px;" onchange="calculerNombreSupprimer()">
+                        </div>
+                        
+                        <div id="previewSuppression" style="display: none; background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
+                            <p>Nombre d'entrées à supprimer:</p>
+                            <p id="nombreSupprimer" style="font-size: 2em; font-weight: 700; color: #1976d2;">-</p>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button onclick="fermerModalSupprimerJournal()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer;">Annuler</button>
+                            <!-- AJOUT DE L'ID SUR LE BOUTON SUPPRIMER -->
+                            <button id="btnConfirmerSuppressionJournal" onclick="validerSuppressionJournal()" disabled style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">Supprimer</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Statistiques journalisation -->
+                <div class="stats-grid" style="margin-top: 20px;">
+                    <div class="stat-card">
+                        <span class="stat-number" id="stats-total-actions">0</span>
+                        <span class="stat-label">Total actions</span>
+                    </div>
+                    <div class="stat-card success">
+                        <span class="stat-number" id="stats-connexions">0</span>
+                        <span class="stat-label">Connexions</span>
+                    </div>
+                    <div class="stat-card purple">
+                        <span class="stat-number" id="stats-uploads">0</span>
+                        <span class="stat-label">Uploads</span>
+                    </div>
+                    <div class="stat-card warning">
+                        <span class="stat-number" id="stats-modifications">0</span>
+                        <span class="stat-label">Modifications</span>
+                    </div>
+                </div>
+
+                <!-- Filtres journalisation -->
+                <div class="filters-container" style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 20px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Type d'action</label>
+                            <select id="filtre-type-action" onchange="chargerJournalisation()" class="filter-select">
+                                <option value="">Tous les types</option>
+                                <option value="CONNEXION">Connexion</option>
+                                <option value="DECONNEXION">Déconnexion</option>
+                                <option value="UPLOAD_FICHIER">Upload de fichier</option>
+                                <option value="VALIDATION_FICHIER">Validation de fichier</option>
+                                <option value="REJET_FICHIER">Rejet de fichier</option>
+                                <option value="CREATION_UTILISATEUR">Création d'utilisateur</option>
+                                <option value="MODIFICATION_UTILISATEUR">Modification d'utilisateur</option>
+                                <option value="SUPPRESSION_FICHIER">Suppression de fichier</option>
+                                <option value="GENERATION_LIEN">Génération de lien</option>
+                                <option value="AUTRE">Autre</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date début</label>
+                            <input type="datetime-local" id="filtre-date-debut" onchange="chargerJournalisation()" 
+                                class="filter-input" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date fin</label>
+                            <input type="datetime-local" id="filtre-date-fin" onchange="chargerJournalisation()" 
+                                class="filter-input" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Rechercher</label>
+                            <input type="text" id="recherche-journalisation" placeholder="Description, utilisateur..." 
+                                onkeyup="rechercherJournalisation()" class="filter-input"
+                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tableau journalisation -->
+                <div class="table-container" style="overflow-x: auto; margin-top: 20px;">
+                    <table class="data-table" id="table-journalisation">
+                        <thead>
+                            <tr>
+                                <th>Date/Heure</th>
+                                <th>Type d'action</th>
+                                <th>Utilisateur</th>
+                                <th>Établissement</th>
+                                <th>Description</th>
+                                <th>Adresse IP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-journalisation">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 2em; color: #3498db;"></i>
+                                    <p style="margin-top: 10px; color: #7f8c8d;">Chargement des logs...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination-journalisation" style="margin-top: 20px; text-align: center;"></div>
+            </div>
+            {% endif %}
+
+            <!-- Modal de confirmation pour suppression de JOURNAL -->
+            <div id="modalConfirmationSuppressionJournal" class="modal-suppression">
+                <div class="modal-suppression-content">
+                    <div class="modal-suppression-header">
+                        <div class="icon-warning">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                            </svg>
+                        </div>
+                        <h2> Suppression des journaux</h2>
+                    </div>
+                    <div class="modal-suppression-body">
+                        <p class="warning-text">Vous êtes sur le point de supprimer :</p>
+                        <p class="etablissement-nom" id="nombreJournauxASupprimer" style="font-size: 2em; color: #e74c3c;">-</p>
+                        <p style="text-align: center; font-weight: 600; margin-bottom: 20px;" id="periodeSuppressionJournal"></p>
+                        <div class="danger-zone">
+                            <p><strong> ATTENTION : Cette action est IRRÉVERSIBLE !</strong></p>
+                            <ul class="consequences-list">
+                                <li>Les entrées de journal seront définitivement supprimées</li>
+                                <li>Vous ne pourrez plus consulter l'historique de ces actions</li>
+                                <li>Cette suppression ne peut pas être annulée</li>
+                            </ul>
+                        </div>
+                        <p class="confirmation-question">Êtes-vous absolument certain de vouloir continuer ?</p>
+                    </div>
+                    <div class="modal-suppression-footer">
+                        <button class="btn-cancel-suppression" onclick="fermerModalConfirmationSuppressionJournal()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                            </svg>
+                            Non, annuler
+                        </button>
+                        <button class="btn-confirm-suppression" onclick="executerSuppressionJournal()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                            </svg>
+                            Oui, supprimer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de confirmation pour suppression de FICHIER -->
+            <div id="modalConfirmationSuppressionFichier" class="modal-suppression">
+                <div class="modal-suppression-content">
+                    <div class="modal-suppression-header">
+                        <div class="icon-warning">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                            </svg>
+                        </div>
+                        <h2> Suppression de fichier</h2>
+                    </div>
+                    <div class="modal-suppression-body">
+                        <p class="warning-text">Vous êtes sur le point de supprimer le fichier :</p>
+                        <p class="etablissement-nom" id="nomFichierASupprimer"></p>
+                        <div class="danger-zone">
+                            <p><strong> ATTENTION : Cette action est IRRÉVERSIBLE !</strong></p>
+                            <ul class="consequences-list">
+                                <li>Le fichier sera définitivement supprimé de la base de données</li>
+                                <li>Toutes les données associées seront perdues</li>
+                                <li>Cette action ne peut pas être annulée</li>
+                            </ul>
+                        </div>
+                        <p class="confirmation-question">Êtes-vous absolument certain de vouloir continuer ?</p>
+                    </div>
+                    <div class="modal-suppression-footer">
+                        <button class="btn-cancel-suppression" onclick="fermerModalConfirmationSuppressionFichier()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                            </svg>
+                            Non, annuler
+                        </button>
+                        <button class="btn-confirm-suppression" onclick="executerSuppressionFichier()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                            </svg>
+                            Oui, supprimer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de confirmation pour BANNISSEMENT d'utilisateur -->
+            <div id="modalConfirmationBannissement" class="modal-suppression">
+                <div class="modal-suppression-content">
+                    <div class="modal-suppression-header">
+                        <div class="icon-warning">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                            </svg>
+                        </div>
+                        <h2>Bannissement d'utilisateur</h2>
+                    </div>
+                    <div class="modal-suppression-body">
+                        <p class="warning-text">Vous êtes sur le point de bannir l'utilisateur :</p>
+                        <p class="etablissement-nom" id="nomUtilisateurABannir"></p>
+                        <div class="danger-zone">
+                            <p><strong> ATTENTION : Action importante !</strong></p>
+                            <ul class="consequences-list">
+                                <li>L'utilisateur sera désactivé et ne pourra plus se connecter</li>
+                                <li>Son accès à la plateforme sera immédiatement révoqué</li>
+                                <li>Vous pourrez le réactiver ultérieurement si nécessaire</li>
+                            </ul>
+                        </div>
+                        <p class="confirmation-question">Êtes-vous certain de vouloir bannir cet utilisateur ?</p>
+                    </div>
+                    <div class="modal-suppression-footer">
+                        <button class="btn-cancel-suppression" onclick="fermerModalConfirmationBannissement()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                            </svg>
+                            Non, annuler
+                        </button>
+                        <button class="btn-confirm-suppression" onclick="executerBannissement()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                                <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5z"/>
+                            </svg>
+                            Oui, bannir cet utilisateur
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de REJET de soumission -->
+            <div id="modalRejetSoumission" class="modal-suppression">
+                <div class="modal-suppression-content">
+                    <div class="modal-suppression-header">
+                        <div class="icon-warning">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                            </svg>
+                        </div>
+                        <h2>Rejet de soumission</h2>
+                    </div>
+                    <div class="modal-suppression-body">
+                        <p class="warning-text">Vous êtes sur le point de rejeter la soumission :</p>
+                        <p class="etablissement-nom" id="nomFichierARejeter"></p>
+                        
+                        <div style="margin: 20px 0;">
+                            <label for="motifRejet" style="display: block; font-weight: 600; margin-bottom: 8px; color: #2c3e50;">
+                                Motif du rejet <span style="color: #e74c3c;">*</span>
+                            </label>
+                            <textarea 
+                                id="motifRejet" 
+                                rows="4" 
+                                placeholder="Veuillez indiquer la raison du rejet..." 
+                                style="
+                                    width: 100%;
+                                    padding: 12px;
+                                    border: 2px solid #ddd;
+                                    border-radius: 8px;
+                                    font-family: inherit;
+                                    font-size: 14px;
+                                    resize: vertical;
+                                    min-height: 100px;
+                                    transition: border-color 0.3s;
+                                "
+                                onfocus="this.style.borderColor='#e74c3c'"
+                                onblur="this.style.borderColor='#ddd'"
+                            ></textarea>
+                            <small id="motifError" style="color: #e74c3c; display: none; margin-top: 5px;">
+                                ⚠️ Le motif du rejet est obligatoire
+                            </small>
+                        </div>
+                        
+                    </div>
+                    <div class="modal-suppression-footer">
+                        <button class="btn-cancel-suppression" onclick="fermerModalRejetSoumission()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                            </svg>
+                            Annuler
+                        </button>
+                        <button class="btn-confirm-suppression" onclick="executerRejetSoumission()" style="background-color: #e74c3c;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                            </svg>
+                            Confirmer le rejet
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import du fichier JavaScript -->
+    <script src="{% static 'js/interface_chef.js' %}"></script>
+    <script src="{% static 'js/deconnexion.js' %}"></script>
+</body>
+</html>

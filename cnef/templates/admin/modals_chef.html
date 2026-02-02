@@ -1,0 +1,27 @@
+<!-- Modal de rejet -->
+<div id="modalRejet" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Rejeter la soumission</h3>
+            <span class="close" onclick="fermerModalRejet()">&times;</span>
+        </div>
+        <form id="formRejet">
+            <input type="hidden" id="fichierIdRejet">
+            <div class="form-group">
+                <label for="raisonRejet">Raison du rejet:</label>
+                <textarea id="raisonRejet" class="form-control" rows="4" 
+                        placeholder="Expliquez pourquoi vous rejetez ce fichier..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn" onclick="fermerModalRejet()">Annuler</button>
+                <button type="button" class="btn btn-rejeter" onclick="rejeterSoumission()">Confirmer le rejet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Loading indicator -->
+<div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Traitement en cours...</p>
+</div>

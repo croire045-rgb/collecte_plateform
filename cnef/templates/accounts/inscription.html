@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription Établissement</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard {
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }        
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 120px;
+        }
+
+        .header-center {
+            text-align: center;
+            flex: 1;
+            padding: 0 20px;
+        }
+
+        .main-title {
+            font-size: 1.6em;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .separator {
+            width: 30%;
+            height:3px;
+            background: #000304;
+            margin: 6px auto;
+            border: none;
+        }        
+
+        .sub-title {
+            font-size: 1.1em;
+            color: #efce13;
+            font-weight: 600;
+        }
+
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100px;
+        }
+
+        .logo-left {
+            margin-right: auto;
+        }
+
+        .logo-right {
+            margin-left: auto;
+        }
+
+        .header-image {
+            height: 100px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .content-container {
+            padding: 40px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-title {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+            font-size: 1em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .help-text {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.85em;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(135deg, #2980b9, #1f6aa5);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            color: #2c3e50;
+        }
+
+        .login-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Styles pour le champ catégorie EMF */
+        .categorie-emf-group {
+            display: none;
+            margin-bottom: 25px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .categorie-emf-group.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Debug */
+        .debug-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+
+        @media (max-width: 768px) {
+            .content-container {
+                padding: 20px;
+            }
+            
+            .form-title {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+
+{% load static %}
+
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <div class="logo-container logo-left">
+                <img src="{% static 'image/Congo.png' %}" alt="République du Congo" class="header-image">
+            </div>
+
+            <div class="header-center">
+                <div class="main-title">Comité National Économique et Financier<br> (CNEF)</div>
+                <hr class="separator">
+                <div class="sub-title">Banque des Etats de l'Afrique Centrale<br> (BEAC)</div>
+            </div>
+
+            <div class="logo-container logo-right">
+                <img src="{% static 'image/BEAC.png' %}" alt="BEAC" class="header-image">
+            </div>
+        </div>
+
+        <div class="content-container">
+            <h3 class="form-title">Inscription de l'établissement financier</h3>
+
+            <!-- Debug: Afficher les champs disponibles -->
+            <!-- <div class="debug-info">
+                Champs du formulaire: 
+                {% for field in form %}
+                    {{ field.name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </div> -->
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <p class="error-message">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="form-group">
+                    <label for="{{ form.Nom_etablissement.id_for_label }}">Nom de l'établissement :</label>
+                    {{ form.Nom_etablissement }}
+                    {% if form.Nom_etablissement.errors %}
+                        {% for error in form.Nom_etablissement.errors %}
+                            <p class="error-message">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}">Adresse e-mail :</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        {% for error in form.email.errors %}
+                            <p class="error-message">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.type_etablissement.id_for_label }}">Type d'établissement :</label>
+                    {{ form.type_etablissement }}
+                    {% if form.type_etablissement.errors %}
+                        {% for error in form.type_etablissement.errors %}
+                            <p class="error-message">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <!-- CHAMP CATÉGORIE EMF - CORRIGÉ -->
+                <div class="form-group categorie-emf-group" id="categorie-emf-group">
+                    <label for="id_categorie_emf">Catégorie EMF :</label>
+                    <select name="categorie_emf" id="id_categorie_emf" class="form-control">
+                        <option value="">Sélectionnez une catégorie</option>
+                        <option value="PREMIERE_CATEGORIE">1re Catégorie</option>
+                        <option value="DEUXIEME_CATEGORIE">2e Catégorie</option>
+                    </select>
+                    <p class="help-text">Sélectionnez la catégorie de votre établissement de microfinance</p>
+                    {% if form.categorie_emf.errors %}
+                        {% for error in form.categorie_emf.errors %}
+                            <p class="error-message">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.code_etablissement.id_for_label }}">Code établissement (optionnel) :</label>
+                    {{ form.code_etablissement }}
+                    <p class="help-text">Code unique identifiant votre établissement</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.password.id_for_label }}">Mot de passe :</label>
+                    {{ form.password }}
+                    <p class="help-text">Minimum 8 caractères</p>
+                    {% if form.password.errors %}
+                        {% for error in form.password.errors %}
+                            <p class="error-message">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.password_confirm.id_for_label }}">Confirmation du mot de passe :</label>
+                    {{ form.password_confirm }}
+                    {% if form.password_confirm.errors %}
+                        {% for error in form.password_confirm.errors %}
+                            <p class="error-message">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="submit-btn">S'inscrire</button>
+            </form>
+
+            <p class="login-link">
+                Déjà inscrit ? 
+                <a href="{% url 'connexion' %}">Connectez-vous ici</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const typeField = document.getElementById('id_type_etablissement');
+            const categorieGroup = document.getElementById('categorie-emf-group');
+            const categorieField = document.getElementById('id_categorie_emf');
+            
+            console.log('Type field:', typeField);
+            console.log('Categorie group:', categorieGroup);
+            console.log('Categorie field:', categorieField);
+            
+            function toggleCategorieField() {
+                console.log('Type value:', typeField.value);
+                
+                if (typeField.value === 'EMF') {
+                    // Afficher le groupe catégorie EMF
+                    categorieGroup.style.display = 'block';
+                    categorieField.required = true;
+                    console.log('Afficher catégorie EMF');
+                } else {
+                    // Masquer le groupe catégorie EMF
+                    categorieGroup.style.display = 'none';
+                    categorieField.required = false;
+                    // Réinitialiser la valeur si ce n'est pas un EMF
+                    categorieField.value = '';
+                    console.log('Masquer catégorie EMF');
+                }
+            }
+            
+            // Vérifier l'état initial au chargement de la page
+            toggleCategorieField();
+            
+            // Écouter les changements sur le type d'établissement
+            typeField.addEventListener('change', toggleCategorieField);
+
+            // Gérer la soumission du formulaire pour validation côté client
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                if (typeField.value === 'EMF' && (!categorieField.value || categorieField.value === '')) {
+                    e.preventDefault();
+                    alert('Veuillez sélectionner une catégorie pour les EMF');
+                    categorieGroup.scrollIntoView({ behavior: 'smooth' });
+                    categorieField.focus();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

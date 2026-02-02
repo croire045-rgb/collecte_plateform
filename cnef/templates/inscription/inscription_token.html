@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - Plateforme CNEF</title>
+    {% load static %}
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'image/Congo.png' %}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .inscription-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            overflow: hidden;
+            max-width: 600px;
+            width: 100%;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header-logos {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-image {
+            height: 60px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .main-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .separator {
+            width: 100px;
+            height: 3px;
+            background: #efce13;
+            margin: 10px auto;
+        }
+
+        .sub-title {
+            font-size: 0.95em;
+            color: #efce13;
+            font-weight: 600;
+        }
+
+        .form-container {
+            padding: 40px 30px;
+        }
+
+        .form-title {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .role-acnef {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .role-ucnef {
+            background: #3498db;
+            color: white;
+        }
+
+        .role-aef {
+            background: #f39c12;
+            color: white;
+        }
+
+        .role-uef {
+            background: #27ae60;
+            color: white;
+        }
+
+        .info-box {
+            background: #e8f5e9;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-control:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .password-requirements {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .submit-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .inscription-container {
+                margin: 10px;
+            }
+            
+            .form-container {
+                padding: 30px 20px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="inscription-container">
+        <div class="header">
+            <div class="header-logos">
+                <img src="{% static 'image/Congo.png' %}" alt="République du Congo" class="header-image">
+                <img src="{% static 'image/BEAC.png' %}" alt="BEAC" class="header-image">
+            </div>
+            <div class="main-title">
+                Comité National Économique et Financier<br>(CNEF)
+            </div>
+            <div class="separator"></div>
+            <div class="sub-title">
+                Banque des États de l'Afrique Centrale (BEAC)
+            </div>
+        </div>
+
+        <div class="form-container">
+            <h2 class="form-title">Créer votre compte</h2>
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <span class="role-badge role-{{ token.role|lower }}">
+                    {{ token.get_role_display }}
+                </span>
+            </div>
+
+            {% if token.etablissement %}
+            <div class="info-box">
+                <p><strong>🏦 Établissement :</strong> {{ token.etablissement.Nom_etablissement }}</p>
+                <p><strong>📍 Code :</strong> {{ token.etablissement.code_etablissement }}</p>
+            </div>
+            {% endif %}
+
+            {% if error %}
+                <div class="alert alert-error">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            {% if not token_valide %}
+                <div class="alert alert-warning">
+                    <strong> Lien invalide ou expiré</strong>
+                    <p>Ce lien d'inscription n'est plus valide. Raisons possibles :</p>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li>Le lien a expiré (validité : 48 heures)</li>
+                        <li>Le lien a déjà été utilisé</li>
+                        <li>Le lien est invalide</li>
+                    </ul>
+                    <p style="margin-top: 10px;">
+                        Contactez votre administrateur pour recevoir un nouveau lien.
+                    </p>
+                </div>
+            {% else %}
+                <form method="post" id="inscriptionForm">
+                    {% csrf_token %}
+
+                    <!-- Email (pré-rempli et non modifiable) -->
+                    <div class="form-group">
+                        <label for="email">Adresse e-mail</label>
+                        <input 
+                            type="email" 
+                            class="form-control" 
+                            id="email" 
+                            name="email"
+                            value="{{ token.email_destinataire }}"
+                            readonly
+                            disabled
+                        >
+                    </div>
+
+                    <!-- Nom -->
+                    <div class="form-group">
+                        <label for="nom">Nom *</label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="nom" 
+                            name="nom"
+                            required
+                            placeholder="Votre nom de famille"
+                            value="{{ form.nom.value|default:'' }}"
+                        >
+                        {% if form.nom.errors %}
+                            <div class="error-message">{{ form.nom.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Prénom -->
+                    <div class="form-group">
+                        <label for="prenom">Prénom *</label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="prenom" 
+                            name="prenom"
+                            required
+                            placeholder="Votre prénom"
+                            value="{{ form.prenom.value|default:'' }}"
+                        >
+                        {% if form.prenom.errors %}
+                            <div class="error-message">{{ form.prenom.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Téléphone -->
+                    <div class="form-group">
+                        <label for="telephone">Téléphone *</label>
+                        <input 
+                            type="tel" 
+                            class="form-control" 
+                            id="telephone" 
+                            name="telephone"
+                            placeholder="+242 06 123 45 67"
+                            value="{{ form.telephone.value|default:'' }}"
+                        >
+                        {% if form.telephone.errors %}
+                            <div class="error-message">{{ form.telephone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Mot de passe -->
+                    <div class="form-group">
+                        <label for="password">Mot de passe *</label>
+                        <input 
+                            type="password" 
+                            class="form-control" 
+                            id="password" 
+                            name="password"
+                            required
+                            placeholder="Minimum 8 caractères"
+                        >
+                        <div class="password-requirements">
+                            Le mot de passe doit contenir au moins 8 caractères
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="error-message">{{ form.password.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Confirmation mot de passe -->
+                    <div class="form-group">
+                        <label for="password_confirm">Confirmer le mot de passe *</label>
+                        <input 
+                            type="password" 
+                            class="form-control" 
+                            id="password_confirm" 
+                            name="password_confirm"
+                            required
+                            placeholder="Retapez votre mot de passe"
+                        >
+                        {% if form.password_confirm.errors %}
+                            <div class="error-message">{{ form.password_confirm.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="alert alert-warning" style="font-size: 13px;">
+                        ⏰ Ce lien expire le : <strong>{{ token.date_expiration|date:"d/m/Y à H:i" }}</strong><br>
+                        Temps restant : <strong>{{ token.temps_restant_minutes }} minutes</strong>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        ✓ Créer mon compte
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Validation côté client
+        document.getElementById('inscriptionForm')?.addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const passwordConfirm = document.getElementById('password_confirm').value;
+
+            if (password !== passwordConfirm) {
+                e.preventDefault();
+                alert(' Les mots de passe ne correspondent pas');
+                return false;
+            }
+
+            if (password.length < 8) {
+                e.preventDefault();
+                alert(' Le mot de passe doit contenir au moins 8 caractères');
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>

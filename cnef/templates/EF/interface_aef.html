@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interface AEF {{ request.user.etablissement.Nom_etablissement }}</title>
+    {% load static %}
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'image/Congo.png' %}">
+   
+    
+    <!-- Import des fichiers CSS -->
+    <link rel="stylesheet" href="{% static 'css/interface_aef.css' %}">
+    <link rel="stylesheet" href="{% static 'css/deconnexion.css' %}">
+</head>
+<body>
+    <div class="container">
+        <!-- ==================== HEADER ==================== -->
+        <div class="header">
+            <!-- Logo à gauche -->
+            <div class="logo-container logo-left">
+                <img src="{% static 'image/Congo.png' %}" alt="République du Congo" class="header-image">
+            </div>
+
+            <!-- Contenu central -->
+            <div class="header-center">
+                <div class="main-title">Comité National Économique et Financier<br> (CNEF)</div>
+                <hr class="separator">
+                <div class="sub-title">Banque des Etats de l'Afrique Centrale<br> (BEAC)</div>
+            </div>
+
+            <!-- Logo à droite -->
+            <div class="logo-container logo-right">
+                <img src="{% static 'image/BEAC.png' %}" alt="BEAC" class="header-image">
+            </div>
+        </div>
+
+        <!-- ==================== NAVIGATION ==================== -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('dashboard')">
+                Tableau de bord
+            </button>
+            <button class="nav-tab" onclick="switchTab('upload')">
+                Soumettre un fichier
+            </button>
+            <button class="nav-tab" onclick="switchTab('historique')">
+                Historique des soumissions
+            </button>
+            <button class="nav-tab" onclick="switchTab('utilisateurs')">
+                Mes utilisateurs (UEF)
+            </button>
+            <button class="nav-tab" onclick="switchTab('profil')">
+                Mon établissement
+            </button>
+            <button class="nav-tab" onclick="switchTab('journalisation')">
+                Journalisation
+            </button>
+        </div>
+
+        <!-- ==================== CONTENU ==================== -->
+        <div class="tab-content">
+            
+            <!-- ========== ONGLET 1 : TABLEAU DE BORD ========== -->
+            <div id="dashboard" class="tab-pane active">
+                <h2>
+                    Tableau de bord
+                </h2>
+                
+                <!-- Statistiques -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="stat-total-soumissions">0</div>
+                        <div class="stat-label">Total soumissions</div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: #f39c12;">
+                        <div class="stat-number" id="stat-en-attente">0</div>
+                        <div class="stat-label">En attente</div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: #27ae60;">
+                        <div class="stat-number" id="stat-validees">0</div>
+                        <div class="stat-label">Validées</div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: #e74c3c;">
+                        <div class="stat-number" id="stat-rejetees">0</div>
+                        <div class="stat-label">Rejetées</div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: #9b59b6;">
+                        <div class="stat-number" id="stat-utilisateurs">0</div>
+                        <div class="stat-label">Utilisateurs actifs</div>
+                    </div>
+                </div>
+
+                <!-- Dernières soumissions -->
+                <h3>
+                    Dernières soumissions
+                </h3>
+                <table id="table-dernieres-soumissions">
+                    <thead>
+                        <tr>
+                            <th>Fichier</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                            <th>Lignes importées</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" style="text-align: center;">Chargement...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ========== ONGLET 2 : SOUMETTRE UN FICHIER ========== -->
+            <div id="upload" class="tab-pane">
+                <div class="upload-container">
+                    <h2>Soumettre le fichier</h2>
+                    <div class="upload-card">
+                        <form id="form-upload-fichier" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <div class="upload-zone" id="dropZone">
+                                <div class="upload-icon">
+                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                </div>
+                                <h3 class="upload-zone-title">Glissez ou déposez votre fichier ici</h3>
+                                <p class="upload-zone-text">ou</p>
+                                <label for="fichier" class="upload-btn-label">
+                                    <span>Parcourir les fichiers</span>
+                                    <input type="file" id="fichier" name="fichier" accept=".xlsx,.xls" required onchange="handleFileSelectForPreview(this.files)">
+                                </label>
+                                <p class="upload-zone-info">Formats .xlsx, .xls </p>
+                            </div>
+
+                            <div class="file-selected" id="fileSelected" style="display: none;">
+                                <!-- Partie gauche : infos du fichier -->
+                                <div class="file-info">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                    </svg>
+                                    <div class="file-details">
+                                        <p class="file-name" id="fileName"></p>
+                                        <p class="file-size" id="fileSize"></p>
+                                    </div>
+                                    <button type="button" class="file-remove" onclick="removeFile()">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                <!-- Partie droite : bouton soumettre -->
+                                <button type="submit" class="btn-submit" id="submitBtn" style="display: none;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    <span>Soumettre le fichier</span>
+                                </button>
+                            </div>
+                        </form>
+                        <div id="upload-result"></div>
+                    </div>
+
+                    <!-- Section de prévisualisation -->
+                    <div class="preview-section" id="previewSection">
+                        <div class="preview-header">
+                            <h3 class="preview-title">Aperçu de la Base de Données</h3>
+                            <div class="sheet-selector" id="sheetSelector" style="display: none;">
+                                <label for="sheetSelect" class="sheet-label">Feuille :</label>
+                                <select id="sheetSelect" class="sheet-select" onchange="changeSheet()"></select>
+                            </div>
+                        </div>
+                        
+                        <div class="preview-info" id="previewInfo"></div>
+                        
+                        <div class="preview-table-wrapper">
+                            <div class="preview-content" id="previewContent">
+                                <!-- Le contenu de prévisualisation sera généré ici -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Les autres onglets restent inchangés -->
+            <!-- ========== ONGLET 3 : HISTORIQUE ========== -->
+            <div id="historique" class="tab-pane">
+                <h2>
+                    Historique de mes soumissions
+                </h2>
+
+                <!-- Filtres -->
+                <div style="margin-bottom: 20px;">
+                    <label>Filtrer par statut :</label>
+                    <select id="filtre-statut" class="form-control" style="width: 300px; display: inline-block;" onchange="chargerHistorique()">
+                        <option value="">Tous</option>
+                        <option value="EN_COURS">En attente</option>
+                        <option value="REUSSI">Validées</option>
+                        <option value="REJETE">Rejetées</option>
+                        <option value="ERREUR">Erreur</option>
+                    </select>
+                </div>
+
+                <table id="table-historique">
+                    <thead>
+                        <tr>
+                            <th>Fichier</th>
+                            <th>Date de soumission</th>
+                            <th>Statut</th>
+                            <th>Lignes importées</th>
+                            <th>Commentaire</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="6" style="text-align: center;">Chargement...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ========== ONGLET 4 : GESTION UTILISATEURS UEF ========== -->
+            <div id="utilisateurs" class="tab-pane">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>
+                        Mes utilisateurs (UEF)
+                    </h2>
+
+                    <button class="btn btn-success" onclick="ouvrirModalInviterUEF()">
+                        
+                        Inviter un utilisateur
+                    </button>
+                </div>
+
+                <!-- Liste des utilisateurs -->
+                <table id="table-utilisateurs-uef">
+                    <thead>
+                        <tr>
+                            <th>Nom complet</th>
+                            <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Statut</th>
+                            <th>Date de création</th>
+                            <th>Dernière connexion</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="7" style="text-align: center;">Chargement...</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Invitations en attente -->
+                <h3 style="margin-top: 40px;">  
+                    Invitations en attente
+                </h3>
+                <table id="table-invitations-attente">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Date d'envoi</th>
+                            <th>Expiration</th>
+                            <th>Temps restant</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" style="text-align: center;">Aucune invitation en attente</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ========== ONGLET 5 : PROFIL ÉTABLISSEMENT ========== -->
+            <div id="profil" class="tab-pane">
+                <h2>
+                    Informations de mon établissement
+                </h2>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Nom de l'établissement</div>
+                        <div style="font-size: 1.5em; font-weight: bold; margin-top: 10px;">
+                            {{ request.user.etablissement.Nom_etablissement }}
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Code établissement</div>
+                        <div style="font-size: 1.5em; font-weight: bold; margin-top: 10px;">
+                            {{ request.user.etablissement.code_etablissement }}
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Type</div>
+                        <div style="font-size: 1.5em; font-weight: bold; margin-top: 10px;">
+                            {{ request.user.etablissement.get_type_etablissement_display }}
+                        </div>
+                    </div>
+                    {% if request.user.etablissement.type_etablissement == 'EMF' %}
+                    <div class="stat-card">
+                        <div class="stat-label">Catégorie</div>
+                        <div style="font-size: 1.5em; font-weight: bold; margin-top: 10px;">
+                            {% if request.user.etablissement.categorie_emf %}
+                                {{ request.user.etablissement.get_categorie_emf_display }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <h3> Mon compte administrateur</h3>
+                <table>
+                    <tr>
+                        <th>Nom complet</th>
+                        <td>{{ request.user.get_full_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td>{{ request.user.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Téléphone</th>
+                        <td>{{ request.user.telephone|default:"Non renseigné" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Rôle</th>
+                        <td>{{ request.user.get_role_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date de création</th>
+                        <td>{{ request.user.date_joined|date:"d/m/Y à H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Dernière connexion</th>
+                        <td>{{ request.user.derniere_connexion|date:"d/m/Y à H:i"|default:"Jamais" }}</td>
+                    </tr>
+                </table>
+
+                <button class="btn btn-primary" style="margin-top: 20px;" onclick="ouvrirModalModifierProfil()">
+                    
+                    Modifier mes informations
+                </button>
+
+                <button class="btn btn-danger" style="margin-top: 20px;" onclick="deconnexion()">
+                    
+                    Se déconnecter
+                </button>
+            </div>
+            
+            <!-- ========== ONGLET : JOURNALISATION ========== -->
+            <div id="journalisation" class="tab-pane">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>Journalisation</h2>
+                    <button class="btn btn-success" onclick="exporterJournalisationCSV()">
+                        Exporter en CSV
+                    </button>
+                </div>
+
+                <!-- Statistiques journalisation -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="stat-total-actions">0</div>
+                        <div class="stat-label">Total actions</div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: #27ae60;">
+                        <div class="stat-number" id="stat-connexions">0</div>
+                        <div class="stat-label">Connexions</div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: #9b59b6;">
+                        <div class="stat-number" id="stat-uploads">0</div>
+                        <div class="stat-label">Uploads</div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: #f39c12;">
+                        <div class="stat-number" id="stat-invitations">0</div>
+                        <div class="stat-label">Invitations générées</div>
+                    </div>
+                </div>
+
+                <!-- Filtres -->
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div class="form-group">
+                            <label>Type d'action</label>
+                            <select id="filtre-type-action" class="form-control" onchange="chargerJournalisation()">
+                                <option value="">Tous les types</option>
+                                <option value="CONNEXION">Connexion</option>
+                                <option value="DECONNEXION">Déconnexion</option>
+                                <option value="UPLOAD_FICHIER">Upload de fichier</option>
+                                <option value="GENERATION_LIEN">Génération de lien</option>
+                                <option value="MODIFICATION_UTILISATEUR">Modification utilisateur</option>
+                                <option value="AUTRE">Autre</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Date début</label>
+                            <input type="datetime-local" id="filtre-date-debut" class="form-control" onchange="chargerJournalisation()">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Date fin</label>
+                            <input type="datetime-local" id="filtre-date-fin" class="form-control" onchange="chargerJournalisation()">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Rechercher</label>
+                            <input type="text" id="recherche-journalisation" class="form-control" placeholder="Description, utilisateur..." onkeyup="rechercherJournalisation()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tableau journalisation -->
+                <table id="table-journalisation">
+                    <thead>
+                        <tr>
+                            <th>Date/Heure</th>
+                            <th>Type d'action</th>
+                            <th>Utilisateur</th>
+                            <th>Description</th>
+                            <th>Adresse IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" style="text-align: center;">Chargement...</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Pagination -->
+                <div id="pagination-journalisation" style="margin-top: 20px; text-align: center;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL : INVITER UN UEF ==================== -->
+    <div id="modal-inviter-uef" class="modal">
+        <div class="modal-content">
+            <h2>➕ Inviter un nouvel utilisateur (UEF)</h2>
+            <form id="form-inviter-uef">
+                <div class="form-group">
+                    <label>Email du destinataire *</label>
+                    <input type="email" id="email-uef" class="form-control" required placeholder="exemple@email.com">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-success">📧 Générer le lien d'invitation</button>
+                    <button type="button" class="btn btn-danger" onclick="fermerModalInviterUEF()">Annuler</button>
+                </div>
+            </form>
+            <div id="resultat-invitation" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL : MODIFIER PROFIL ==================== -->
+    <div id="modal-modifier-profil" class="modal">
+        <div class="modal-content">
+            <h2>Modifier mes informations</h2>
+            <form id="form-modifier-profil">
+                <div class="form-group">
+                    <label>Prénom</label>
+                    <input type="text" id="edit-prenom" class="form-control" value="{{ request.user.prenom }}">
+                </div>
+                <div class="form-group">
+                    <label>Nom</label>
+                    <input type="text" id="edit-nom" class="form-control" value="{{ request.user.nom }}">
+                </div>
+                <div class="form-group">
+                    <label>Téléphone</label>
+                    <input type="tel" id="edit-telephone" class="form-control" value="{{ request.user.telephone|default:'' }}">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary">
+                        Enregistrer
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="fermerModalModifierProfil()">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bouton flottant de déconnexion draggable -->
+    <div id="logoutBubble" class="logout-bubble" title="Se déconnecter">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+    </div>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="{% static 'js/interface_aef.js' %}"></script>
+    <script src="{% static 'js/deconnexion.js' %}"></script>
+</body>
+</html>

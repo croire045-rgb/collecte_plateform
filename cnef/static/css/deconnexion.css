@@ -1,0 +1,100 @@
+/* ==========================================
+   BOUTON FLOTTANT DE DÉCONNEXION (DRAGGABLE)
+   ========================================== */
+
+.logout-bubble {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: move;
+    box-shadow: 0 4px 20px rgba(231, 76, 60, 0.4);
+    transition: all 0.3s ease;
+    z-index: 9999;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+.logout-bubble svg {
+    color: white;
+    width: 28px;
+    height: 28px;
+    pointer-events: none;
+}
+
+/* Effet hover */
+.logout-bubble:hover {
+    background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+    box-shadow: 0 6px 30px rgba(231, 76, 60, 0.6);
+    transform: scale(1.1);
+}
+
+/* Animation au survol */
+.logout-bubble:hover svg {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* État actif (pendant le drag) */
+.logout-bubble.dragging {
+    cursor: grabbing;
+    box-shadow: 0 8px 40px rgba(231, 76, 60, 0.7);
+    transform: scale(1.15);
+}
+
+/* Animation d'apparition au chargement */
+@keyframes fadeInBubble {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.logout-bubble {
+    animation: fadeInBubble 0.5s ease-out;
+}
+
+/* Style responsive pour mobile */
+@media (max-width: 768px) {
+    .logout-bubble {
+        width: 50px;
+        height: 50px;
+        bottom: 20px;
+        right: 20px;
+    }
+    
+    .logout-bubble svg {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* Pulse animation pour attirer l'attention */
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 4px 20px rgba(231, 76, 60, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 30px rgba(231, 76, 60, 0.8);
+    }
+}
+
+.logout-bubble.pulse {
+    animation: pulse 2s infinite;
+}
